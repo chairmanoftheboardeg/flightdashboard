@@ -15,7 +15,6 @@
       --brand-gold: #b5892b;
       --charcoal: #252525;
       --ink: #111111;
-      --ink-soft: #333333;
       --muted: #6b7280;
       --line: #e5e3df;
       --bg-page: #f5f3f1;
@@ -165,20 +164,14 @@
       color: #6b7280;
     }
 
-    /* Layout */
+    /* Main layout: vertical */
     .page-main {
       max-width: 1200px;
       margin: 0 auto;
       padding: 18px 18px 40px;
-      display: grid;
-      grid-template-columns: minmax(0, 3.2fr) minmax(0, 2fr);
+      display: flex;
+      flex-direction: column;
       gap: 20px;
-      align-items: flex-start;
-    }
-    @media (max-width: 900px) {
-      .page-main {
-        grid-template-columns: minmax(0,1fr);
-      }
     }
 
     .card {
@@ -186,7 +179,7 @@
       border-radius: var(--radius-lg);
       border: 1px solid var(--line);
       box-shadow: var(--shadow-soft);
-      padding: 16px 16px 16px;
+      padding: 16px 16px 18px;
     }
     .card h2, .card h3 {
       margin-top: 0;
@@ -208,14 +201,10 @@
       margin: 10px 0 12px;
     }
     @media (max-width: 900px) {
-      .filters {
-        grid-template-columns: repeat(2, minmax(0,1fr));
-      }
+      .filters { grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
     @media (max-width: 600px) {
-      .filters {
-        grid-template-columns: minmax(0,1fr);
-      }
+      .filters { grid-template-columns: minmax(0,1fr); }
     }
     .filter-label {
       font-size: 0.75rem;
@@ -269,15 +258,9 @@
       font-weight: 600;
       white-space: nowrap;
     }
-    tbody tr:nth-child(even) {
-      background: #f9fafb;
-    }
-    tbody tr:nth-child(odd) {
-      background: #ffffff;
-    }
-    tbody tr:hover {
-      background: #fef2f2;
-    }
+    tbody tr:nth-child(even) { background: #f9fafb; }
+    tbody tr:nth-child(odd) { background: #ffffff; }
+    tbody tr:hover { background: #fef2f2; }
     .col-number {
       font-weight: 700;
       color: #111827;
@@ -322,9 +305,8 @@
       cursor: default;
       white-space: nowrap;
     }
-    .status-pill.clickable {
-      cursor: pointer;
-    }
+    .status-pill.clickable { cursor: pointer; }
+
     .status-On\ Time {
       background: #ecfdf5;
       color: var(--status-green);
@@ -358,19 +340,19 @@
       align-items: center;
       justify-content: flex-end;
     }
-    .icon-btn {
+    .action-btn {
       border-radius: 999px;
       border: 1px solid #e5e7eb;
       background: #ffffff;
-      width: 24px;
-      height: 24px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      font-size: 0.8rem;
-      cursor: pointer;
+      gap: 4px;
     }
-    .icon-btn:hover {
+    .action-btn span.icon { font-size: 0.8rem; }
+    .action-btn:hover {
       background: #fee2e2;
       border-color: #fecaca;
     }
@@ -391,10 +373,8 @@
       border: 1px solid #e0e7ff;
     }
 
-    /* Sidebar: login + admin form */
-    .form-row {
-      margin-bottom: 10px;
-    }
+    /* OCC panel */
+    .form-row { margin-bottom: 10px; }
     .form-label {
       display: flex;
       justify-content: space-between;
@@ -447,9 +427,8 @@
       cursor: pointer;
       box-shadow: var(--shadow-soft);
     }
-    .btn-primary:hover {
-      background: var(--brand-red-dark);
-    }
+    .btn-primary:hover { background: var(--brand-red-dark); }
+
     .btn-secondary {
       display: inline-flex;
       align-items: center;
@@ -462,13 +441,9 @@
       font-size: 0.8rem;
       cursor: pointer;
     }
-    .btn-secondary:hover {
-      background: #e5e7eb;
-    }
-    .btn-block {
-      width: 100%;
-      justify-content: center;
-    }
+    .btn-secondary:hover { background: #e5e7eb; }
+
+    .btn-block { width: 100%; justify-content: center; }
 
     .pill-note {
       display: inline-flex;
@@ -575,7 +550,7 @@
         <div class="brand-logo" aria-hidden="true"></div>
         <div class="brand-text">
           <span>OCC — Operations Control Center</span>
-          <span>Live schedule for Emirates Airlines (Unified) & flydubai</span>
+          <span>Live schedule for Emirates Airlines (Unified) &amp; flydubai</span>
         </div>
       </div>
       <div class="topbar-right">
@@ -587,12 +562,12 @@
     </div>
   </header>
 
-  <!-- Main -->
+  <!-- MAIN -->
   <main class="page-main">
-    <!-- Flights card -->
+    <!-- Flights card (always on top, full width) -->
     <section class="card" aria-label="Live flights">
       <h2>Live operations</h2>
-      <p>View and filter all scheduled virtual flights. OCC staff can update this schedule in real time.</p>
+      <p>View and filter all scheduled virtual flights. OCC staff can update this schedule in real time from the panel at the bottom of this page.</p>
 
       <!-- Filters -->
       <div class="filters">
@@ -658,11 +633,12 @@
       </div>
     </section>
 
-    <!-- Sidebar: OCC login & tools -->
-    <aside class="card" aria-label="OCC tools">
+    <!-- OCC panel under the dashboard -->
+    <section class="card" aria-label="OCC tools">
+      <!-- Logged out view -->
       <div id="occLoggedOut">
         <h2>OCC login</h2>
-        <p>Authorized Operations Control Center staff can log in here to add, edit, and remove flights from the dashboard.</p>
+        <p>Authorized Operations Control Center staff can log in here to add, edit, and remove flights from the dashboard above.</p>
 
         <div class="pill-note">
           <span>🔐</span>
@@ -682,10 +658,11 @@
         <div id="loginStatus" class="status-banner error" style="display:none;"></div>
       </div>
 
+      <!-- Logged in view -->
       <div id="occLoggedIn" style="display:none;">
         <h2>OCC tools</h2>
         <p class="muted">
-          You are logged in to the Flight Dashboard OCC panel. Use this form to create or edit flights.
+          You are logged in to the Flight Dashboard OCC panel. Use this form to create or edit flights; changes appear instantly in the live table above.
         </p>
 
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -698,15 +675,13 @@
           <div class="form-row">
             <label class="form-label" for="flightNumber">
               Flight number
-              <span class="hint">e.g. EK123, FZ45</span>
+              <span class="hint">e.g. EGR101, FZ45</span>
             </label>
             <input id="flightNumber" class="form-input" required>
           </div>
 
           <div class="form-row">
-            <label class="form-label" for="airlineSelect">
-              Airline
-            </label>
+            <label class="form-label" for="airlineSelect">Airline</label>
             <select id="airlineSelect" class="form-select" required>
               <option value="Emirates Airlines (Unified)">Emirates Airlines (Unified)</option>
               <option value="flydubai">flydubai</option>
@@ -726,38 +701,28 @@
           </div>
 
           <div class="form-row">
-            <label class="form-label" for="fromInput">
-              From
-            </label>
+            <label class="form-label" for="fromInput">From</label>
             <input id="fromInput" class="form-input" placeholder="e.g. Greater Rockford International" required>
           </div>
 
           <div class="form-row">
-            <label class="form-label" for="toInput">
-              To
-            </label>
+            <label class="form-label" for="toInput">To</label>
             <input id="toInput" class="form-input" placeholder="e.g. Dubai International" required>
           </div>
 
           <div class="form-row" style="display:flex;gap:10px;">
             <div style="flex:1;">
-              <label class="form-label" for="depInput">
-                Departure (local)
-              </label>
+              <label class="form-label" for="depInput">Departure (local)</label>
               <input id="depInput" class="form-input" placeholder="19:55" required>
             </div>
             <div style="flex:1;">
-              <label class="form-label" for="arrInput">
-                Arrival (local)
-              </label>
+              <label class="form-label" for="arrInput">Arrival (local)</label>
               <input id="arrInput" class="form-input" placeholder="21:05" required>
             </div>
           </div>
 
           <div class="form-row">
-            <label class="form-label" for="statusSelect">
-              Status
-            </label>
+            <label class="form-label" for="statusSelect">Status</label>
             <select id="statusSelect" class="form-select">
               <option value="On Time">On Time</option>
               <option value="Boarding">Boarding</option>
@@ -769,9 +734,7 @@
           </div>
 
           <div class="form-row">
-            <label class="form-label" for="gateInput">
-              Gate / stand
-            </label>
+            <label class="form-label" for="gateInput">Gate / stand</label>
             <input id="gateInput" class="form-input" placeholder="e.g. A12, Remote, Hangar 3">
           </div>
 
@@ -789,7 +752,7 @@
 
         <div id="occStatus" class="status-banner success" style="display:none;"></div>
       </div>
-    </aside>
+    </section>
   </main>
 
   <!-- Footer -->
@@ -808,7 +771,6 @@
     const OCC_PASSWORD = "EmiratesGroupRoblox#OCCOPSFlightDash2025@egr";
     const STORAGE_KEY_FLIGHTS = "egr_flights_v1";
     const STORAGE_KEY_OCC = "egr_occ_logged_in";
-
     const STATUS_SEQUENCE = ["On Time", "Boarding", "Live", "Landed", "Delayed", "Cancelled"];
 
     // ====== STATE ======
@@ -834,7 +796,6 @@
     const btnCancelEdit = document.getElementById("btnCancelEdit");
     const btnLogout = document.getElementById("btnLogout");
 
-    // Inputs for form
     const flightNumberInput = document.getElementById("flightNumber");
     const airlineSelect = document.getElementById("airlineSelect");
     const simSelect = document.getElementById("simSelect");
@@ -851,90 +812,16 @@
       const stored = localStorage.getItem(STORAGE_KEY_FLIGHTS);
       if (stored) {
         try {
-          flights = JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) flights = parsed;
         } catch {
           flights = [];
         }
-      }
-      if (!Array.isArray(flights) || flights.length === 0) {
-        flights = seedFlights();
-        saveFlights();
       }
     }
 
     function saveFlights() {
       localStorage.setItem(STORAGE_KEY_FLIGHTS, JSON.stringify(flights));
-    }
-
-    function seedFlights() {
-      // Initial example flights (you can change these)
-      return [
-        {
-          id: "1",
-          flightNumber: "EGR101",
-          airline: "Emirates Airlines (Unified)",
-          simulator: "PTFS",
-          from: "Greater Rockford International",
-          to: "Dubai International",
-          depTime: "19:30",
-          arrTime: "21:45",
-          status: "Boarding",
-          gate: "A11",
-          remarks: "PTFS hub departure"
-        },
-        {
-          id: "2",
-          flightNumber: "EGR212",
-          airline: "Emirates Airlines (Unified)",
-          simulator: "ROAV",
-          from: "London Heathrow",
-          to: "Dubai International",
-          depTime: "20:10",
-          arrTime: "23:35",
-          status: "On Time",
-          gate: "B4",
-          remarks: "RO-Aviation event flight"
-        },
-        {
-          id: "3",
-          flightNumber: "FZ45",
-          airline: "flydubai",
-          simulator: "N/A",
-          from: "Dubai International",
-          to: "Izolirani International",
-          depTime: "21:00",
-          arrTime: "22:40",
-          status: "On Time",
-          gate: "F2",
-          remarks: "Codeshare with Emirates Unified"
-        },
-        {
-          id: "4",
-          flightNumber: "EGR330",
-          airline: "Emirates Airlines (Unified)",
-          simulator: "PTFS",
-          from: "Perth International",
-          to: "Dubai International",
-          depTime: "18:15",
-          arrTime: "23:05",
-          status: "Live",
-          gate: "Remote",
-          remarks: "Long-haul training flight"
-        },
-        {
-          id: "5",
-          flightNumber: "FZ92",
-          airline: "flydubai",
-          simulator: "N/A",
-          from: "Dubai International",
-          to: "Larnaca International",
-          depTime: "19:55",
-          arrTime: "22:05",
-          status: "On Time",
-          gate: "C7",
-          remarks: ""
-        }
-      ];
     }
 
     function setOCCLoggedIn(value) {
@@ -996,8 +883,7 @@
       btnSaveFlight.textContent = "Save changes";
       btnCancelEdit.style.display = "inline-flex";
       occStatus.style.display = "none";
-      flightNumberInput.focus();
-      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      flightNumberInput.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 
     function deleteFlight(id) {
@@ -1033,7 +919,6 @@
         if (airlineFilter !== "all" && f.airline !== airlineFilter) return false;
         if (simFilter !== "all" && f.simulator !== simFilter) return false;
         if (statusFilter !== "all" && f.status !== statusFilter) return false;
-
         if (search) {
           const hay = (
             f.flightNumber + " " +
@@ -1054,7 +939,7 @@
         const td = document.createElement("td");
         td.colSpan = 10;
         td.className = "empty-row";
-        td.textContent = "No flights match the current filters.";
+        td.textContent = "No flights in the dashboard yet. OCC staff can add flights from the panel below.";
         tr.appendChild(td);
         flightsBody.appendChild(tr);
         return;
@@ -1127,16 +1012,16 @@
 
           const editBtn = document.createElement("button");
           editBtn.type = "button";
-          editBtn.className = "icon-btn";
-          editBtn.innerHTML = "✏";
+          editBtn.className = "action-btn";
           editBtn.title = "Edit flight";
+          editBtn.innerHTML = '<span class="icon">✏</span><span>Edit</span>';
           editBtn.addEventListener("click", () => startEditFlight(f.id));
 
           const delBtn = document.createElement("button");
           delBtn.type = "button";
-          delBtn.className = "icon-btn";
-          delBtn.innerHTML = "🗑";
+          delBtn.className = "action-btn";
           delBtn.title = "Delete flight";
+          delBtn.innerHTML = '<span class="icon">🗑</span><span>Delete</span>';
           delBtn.addEventListener("click", () => deleteFlight(f.id));
 
           wrapper.appendChild(editBtn);
@@ -1155,10 +1040,7 @@
     [filterAirline, filterSim, filterStatus].forEach(el => {
       el.addEventListener("change", renderFlights);
     });
-    filterSearch.addEventListener("input", () => {
-      // small debounce not really needed; simple
-      renderFlights();
-    });
+    filterSearch.addEventListener("input", renderFlights);
 
     loginForm.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -1168,6 +1050,7 @@
         setOCCLoggedIn(true);
         document.getElementById("occPassword").value = "";
         showOCCStatus("success", "OCC login successful.");
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
       } else {
         showLoginError("Incorrect OCC password.");
       }
