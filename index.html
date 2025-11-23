@@ -767,454 +767,513 @@
   </footer>
 
   <script>
-    // ---------- CONFIG ----------
-    const OCC_PASSWORD = "EmiratesGroupRobloxOCC#2025";
-    const STORAGE_KEY_FLIGHTS = "egr_flights_schedule_v3";
-    const STORAGE_KEY_OCC = "egr_occ_logged_in_v2";
-    const STATUS_SEQUENCE = ["On Time","Boarding","Live","Landed","Delayed","Cancelled"];
+  // ---------- BOT API CONFIG ----------
+  // Set this once the bot is hosted publicly, e.g.:
+  // const BOT_API_BASE = "https://egr-bot.onrender.com";
+  const BOT_API_BASE = "";
 
-    // ---------- STATE ----------
-    let flights = [];
-    let occLoggedIn = false;
-    let weekOffsetDays = 0; // multiple of 7
-    let selectedDateKey = null; // "YYYY-MM-DD"
+  // ---------- CONFIG ----------
+  const OCC_PASSWORD = "EmiratesGroupRobloxOCC#2025";
+  const STORAGE_KEY_FLIGHTS = "egr_flights_schedule_v3";
+  const STORAGE_KEY_OCC = "egr_occ_logged_in_v2";
+  const STATUS_SEQUENCE = [
+    "On Time",
+    "Boarding",
+    "Live",
+    "Landed",
+    "Delayed",
+    "Cancelled",
+  ];
 
-    // ---------- DOM ----------
-    const dubaiTimeHeader = document.getElementById("dubaiTimeHeader");
-    const localTimeHeader = document.getElementById("localTimeHeader");
-    const weekStrip = document.getElementById("weekStrip");
-    const selectedDateHeading = document.getElementById("selectedDateHeading");
-    const flightsContainer = document.getElementById("flightsContainer");
-    const searchInput = document.getElementById("searchInput");
+  // ---------- STATE ----------
+  let flights = [];
+  let occLoggedIn = false;
+  let weekOffsetDays = 0;
+  let selectedDateKey = null;
 
-    const occLoggedOut = document.getElementById("occLoggedOut");
-    const occLoggedInEl = document.getElementById("occLoggedIn");
-    const loginForm = document.getElementById("loginForm");
-    const loginStatus = document.getElementById("loginStatus");
-    const btnLogout = document.getElementById("btnLogout");
-    const occStatus = document.getElementById("occStatus");
+  // ---------- DOM ----------
+  const dubaiTimeHeader = document.getElementById("dubaiTimeHeader");
+  const localTimeHeader = document.getElementById("localTimeHeader");
+  const weekStrip = document.getElementById("weekStrip");
+  const selectedDateHeading = document.getElementById("selectedDateHeading");
+  const flightsContainer = document.getElementById("flightsContainer");
+  const searchInput = document.getElementById("searchInput");
 
-    const flightForm = document.getElementById("flightForm");
-    const editingIdInput = document.getElementById("editingId");
-    const btnSaveFlight = document.getElementById("btnSaveFlight");
-    const btnCancelEdit = document.getElementById("btnCancelEdit");
+  const occLoggedOut = document.getElementById("occLoggedOut");
+  const occLoggedInEl = document.getElementById("occLoggedIn");
+  const loginForm = document.getElementById("loginForm");
+  const loginStatus = document.getElementById("loginStatus");
+  const btnLogout = document.getElementById("btnLogout");
+  const occStatus = document.getElementById("occStatus");
 
-    const flightDateInput = document.getElementById("flightDate");
-    const flightNumberInput = document.getElementById("flightNumber");
-    const airlineSelect = document.getElementById("airlineSelect");
-    const aircraftInput = document.getElementById("aircraftInput");
-    const simSelect = document.getElementById("simSelect");
-    const fromInput = document.getElementById("fromInput");
-    const toInput = document.getElementById("toInput");
-    const depInput = document.getElementById("depInput");
-    const arrInput = document.getElementById("arrInput");
-    const statusSelect = document.getElementById("statusSelect");
-    const gateInput = document.getElementById("gateInput");
-    const remarksInput = document.getElementById("remarksInput");
+  const flightForm = document.getElementById("flightForm");
+  const editingIdInput = document.getElementById("editingId");
+  const btnSaveFlight = document.getElementById("btnSaveFlight");
+  const btnCancelEdit = document.getElementById("btnCancelEdit");
 
-    // ---------- TIME ----------
-    function pad2(n){return n.toString().padStart(2,"0");}
+  const flightDateInput = document.getElementById("flightDate");
+  const flightNumberInput = document.getElementById("flightNumber");
+  const airlineSelect = document.getElementById("airlineSelect");
+  const aircraftInput = document.getElementById("aircraftInput");
+  const simSelect = document.getElementById("simSelect");
+  const fromInput = document.getElementById("fromInput");
+  const toInput = document.getElementById("toInput");
+  const depInput = document.getElementById("depInput");
+  const arrInput = document.getElementById("arrInput");
+  const statusSelect = document.getElementById("statusSelect");
+  const gateInput = document.getElementById("gateInput");
+  const remarksInput = document.getElementById("remarksInput");
 
-    function updateTime(){
-      const now = new Date();
-      // local
-      localTimeHeader.textContent = now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
-      // Dubai (UTC+4)
-      const utc = now.getTime() + now.getTimezoneOffset()*60000;
-      const dubai = new Date(utc + 4*3600000);
-      dubaiTimeHeader.textContent = dubai.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
-    }
-    updateTime();
-    setInterval(updateTime, 1000);
+  // ---------- TIME ----------
+  function pad2(n) {
+    return n.toString().padStart(2, "0");
+  }
 
-    // ---------- STORAGE ----------
-    function loadFlights(){
-      const stored = localStorage.getItem(STORAGE_KEY_FLIGHTS);
-      if(stored){
-        try{
-          const parsed = JSON.parse(stored);
-          if(Array.isArray(parsed)) flights = parsed;
-        }catch(e){ flights = []; }
+  function updateTime() {
+    const now = new Date();
+    localTimeHeader.textContent = now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    const dubai = new Date(utc + 4 * 3600000);
+    dubaiTimeHeader.textContent = dubai.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  updateTime();
+  setInterval(updateTime, 1000);
+
+  // ---------- STORAGE ----------
+  function loadFlights() {
+    const stored = localStorage.getItem(STORAGE_KEY_FLIGHTS);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) flights = parsed;
+      } catch (e) {
+        flights = [];
       }
     }
-    function saveFlights(){
-      localStorage.setItem(STORAGE_KEY_FLIGHTS, JSON.stringify(flights));
-      renderWeekStrip();
-      renderFlights();
+  }
+  function saveFlights() {
+    localStorage.setItem(STORAGE_KEY_FLIGHTS, JSON.stringify(flights));
+    renderWeekStrip();
+    renderFlights();
+  }
+  function setOCCLoggedIn(value) {
+    occLoggedIn = value;
+    if (value) {
+      occLoggedOut.style.display = "none";
+      occLoggedInEl.style.display = "block";
+      localStorage.setItem(STORAGE_KEY_OCC, "1");
+    } else {
+      occLoggedOut.style.display = "block";
+      occLoggedInEl.style.display = "none";
+      localStorage.removeItem(STORAGE_KEY_OCC);
     }
-    function setOCCLoggedIn(value){
-      occLoggedIn = value;
-      if(value){
-        occLoggedOut.style.display="none";
-        occLoggedInEl.style.display="block";
-        localStorage.setItem(STORAGE_KEY_OCC,"1");
-      }else{
-        occLoggedOut.style.display="block";
-        occLoggedInEl.style.display="none";
-        localStorage.removeItem(STORAGE_KEY_OCC);
-      }
-      renderFlights();
+    renderFlights();
+  }
+  function showBanner(el, type, msg) {
+    el.style.display = "block";
+    el.className = "status-banner " + type;
+    el.textContent = msg;
+    setTimeout(() => {
+      el.style.display = "none";
+    }, 3500);
+  }
+
+  function resetForm() {
+    editingIdInput.value = "";
+    flightDateInput.value = "";
+    flightNumberInput.value = "";
+    airlineSelect.value = "Emirates Airlines (Unified)";
+    aircraftInput.value = "";
+    simSelect.value = "PTFS";
+    fromInput.value = "";
+    toInput.value = "";
+    depInput.value = "";
+    arrInput.value = "";
+    statusSelect.value = "On Time";
+    gateInput.value = "";
+    remarksInput.value = "";
+    btnSaveFlight.textContent = "Add flight";
+    btnCancelEdit.style.display = "none";
+  }
+
+  // ---------- WEEK STRIP ----------
+  function dateToKey(d) {
+    const year = d.getFullYear();
+    const month = pad2(d.getMonth() + 1);
+    const day = pad2(d.getDate());
+    return `${year}-${month}-${day}`;
+  }
+  function keyToReadable(key) {
+    const d = new Date(key + "T00:00:00");
+    return d.toLocaleDateString([], {
+      weekday: "long",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+  function buildWeekDays() {
+    const ref = new Date();
+    ref.setDate(ref.getDate() + weekOffsetDays);
+    const jsDay = ref.getDay();
+    const mondayOffset = (jsDay + 6) % 7;
+    const monday = new Date(ref);
+    monday.setDate(ref.getDate() - mondayOffset);
+
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      days.push(d);
     }
-    function showBanner(el,type,msg){
-      el.style.display="block";
-      el.className = "status-banner " + type;
-      el.textContent = msg;
-      setTimeout(()=>{ el.style.display="none"; }, 3500);
+    return days;
+  }
+  function renderWeekStrip() {
+    const days = buildWeekDays();
+    if (!selectedDateKey) {
+      const todayKey = dateToKey(new Date());
+      selectedDateKey = todayKey;
     }
+    weekStrip.innerHTML = "";
+    days.forEach((d) => {
+      const key = dateToKey(d);
+      const wrapper = document.createElement("button");
+      wrapper.type = "button";
+      wrapper.className =
+        "week-pill" + (key === selectedDateKey ? " active" : "");
+      wrapper.dataset.dateKey = key;
 
-    function resetForm(){
-      editingIdInput.value="";
-      flightDateInput.value="";
-      flightNumberInput.value="";
-      airlineSelect.value="Emirates Airlines (Unified)";
-      aircraftInput.value="";
-      simSelect.value="PTFS";
-      fromInput.value="";
-      toInput.value="";
-      depInput.value="";
-      arrInput.value="";
-      statusSelect.value="On Time";
-      gateInput.value="";
-      remarksInput.value="";
-      btnSaveFlight.textContent="Add flight";
-      btnCancelEdit.style.display="none";
-    }
-
-    // ---------- WEEK STRIP ----------
-    function dateToKey(d){
-      const year = d.getFullYear();
-      const month = pad2(d.getMonth()+1);
-      const day = pad2(d.getDate());
-      return `${year}-${month}-${day}`;
-    }
-    function keyToReadable(key){
-      const d = new Date(key + "T00:00:00");
-      return d.toLocaleDateString([], {weekday:"long",day:"2-digit",month:"short",year:"numeric"});
-    }
-    function buildWeekDays(){
-      const ref = new Date();
-      ref.setDate(ref.getDate() + weekOffsetDays);
-      // Monday as start of week
-      const jsDay = ref.getDay(); // Sun=0
-      const mondayOffset = (jsDay + 6) % 7;
-      const monday = new Date(ref);
-      monday.setDate(ref.getDate() - mondayOffset);
-
-      const days = [];
-      for(let i=0;i<7;i++){
-        const d = new Date(monday);
-        d.setDate(monday.getDate()+i);
-        days.push(d);
-      }
-      return days;
-    }
-    function renderWeekStrip(){
-      const days = buildWeekDays();
-      if(!selectedDateKey){
-        const todayKey = dateToKey(new Date());
-        selectedDateKey = todayKey;
-      }
-      weekStrip.innerHTML="";
-      days.forEach(d=>{
-        const key = dateToKey(d);
-        const wrapper = document.createElement("button");
-        wrapper.type="button";
-        wrapper.className="week-pill"+(key===selectedDateKey?" active":"");
-        wrapper.dataset.dateKey = key;
-
-        const main = document.createElement("div");
-        main.className="week-pill-main";
-        main.textContent = d.toLocaleDateString([], {day:"2-digit",month:"short"});
-
-        const dayName = document.createElement("div");
-        dayName.className="week-pill-day";
-        dayName.textContent = d.toLocaleDateString([], {weekday:"long"});
-
-        const count = flights.filter(f=>f.date===key).length;
-        const flightsText = document.createElement("div");
-        flightsText.className="week-pill-flights";
-        flightsText.textContent = count + " flight" + (count===1?"":"s");
-
-        wrapper.appendChild(main);
-        wrapper.appendChild(dayName);
-        wrapper.appendChild(flightsText);
-        wrapper.addEventListener("click",()=>{
-          selectedDateKey = key;
-          renderWeekStrip();
-          renderFlights();
-        });
-
-        weekStrip.appendChild(wrapper);
+      const main = document.createElement("div");
+      main.className = "week-pill-main";
+      main.textContent = d.toLocaleDateString([], {
+        day: "2-digit",
+        month: "short",
       });
 
-      selectedDateHeading.textContent = keyToReadable(selectedDateKey);
+      const dayName = document.createElement("div");
+      dayName.className = "week-pill-day";
+      dayName.textContent = d.toLocaleDateString([], { weekday: "long" });
+
+      const count = flights.filter((f) => f.date === key).length;
+      const flightsText = document.createElement("div");
+      flightsText.className = "week-pill-flights";
+      flightsText.textContent = count + " flight" + (count === 1 ? "" : "s");
+
+      wrapper.appendChild(main);
+      wrapper.appendChild(dayName);
+      wrapper.appendChild(flightsText);
+      wrapper.addEventListener("click", () => {
+        selectedDateKey = key;
+        renderWeekStrip();
+        renderFlights();
+      });
+
+      weekStrip.appendChild(wrapper);
+    });
+
+    selectedDateHeading.textContent = keyToReadable(selectedDateKey);
+  }
+
+  // ---------- RENDER FLIGHTS ----------
+  function renderFlights() {
+    flightsContainer.innerHTML = "";
+    const search = searchInput.value.trim().toLowerCase();
+
+    const forDate = flights
+      .filter((f) => f.date === selectedDateKey)
+      .sort((a, b) => {
+        if (a.depTime === b.depTime) {
+          return a.flightNumber.localeCompare(b.flightNumber);
+        }
+        return a.depTime.localeCompare(b.depTime);
+      })
+      .filter((f) => {
+        if (!search) return true;
+        return (f.flightNumber || "").toLowerCase().includes(search);
+      });
+
+    if (forDate.length === 0) {
+      const div = document.createElement("div");
+      div.className = "empty-state";
+      div.textContent =
+        "No flights scheduled for this date yet. OCC staff can add flights using the tools below.";
+      flightsContainer.appendChild(div);
+      return;
     }
 
-    // ---------- RENDER FLIGHTS ----------
-    function renderFlights(){
-      flightsContainer.innerHTML="";
-      const search = searchInput.value.trim().toLowerCase();
+    forDate.forEach((f) => {
+      const card = document.createElement("article");
+      card.className = "flight-card";
 
-      const forDate = flights
-        .filter(f=>f.date===selectedDateKey)
-        .sort((a,b)=>{
-          if(a.depTime===b.depTime){
-            return a.flightNumber.localeCompare(b.flightNumber);
-          }
-          return a.depTime.localeCompare(b.depTime);
-        })
-        .filter(f=>{
-          if(!search) return true;
-          return (f.flightNumber || "").toLowerCase().includes(search);
-        });
+      const left = document.createElement("div");
+      left.className = "flight-left";
 
-      if(forDate.length===0){
-        const div = document.createElement("div");
-        div.className="empty-state";
-        div.textContent="No flights scheduled for this date yet. OCC staff can add flights using the tools below.";
-        flightsContainer.appendChild(div);
-        return;
+      const logo = document.createElement("div");
+      logo.className =
+        "airline-logo " +
+        (f.airline === "flydubai" ? "flydubai" : "emirates");
+      logo.textContent = f.airline === "flydubai" ? "FZ" : "EKU";
+
+      const leftText = document.createElement("div");
+      leftText.className = "flight-left-text";
+
+      const num = document.createElement("div");
+      num.className = "flight-number";
+      num.textContent = f.flightNumber;
+
+      const airlineEl = document.createElement("div");
+      airlineEl.className = "flight-airline";
+      airlineEl.textContent = f.airline;
+
+      const extra = document.createElement("div");
+      extra.className = "flight-extra";
+      extra.textContent = `${f.aircraft} · ${f.simulator}`;
+
+      leftText.appendChild(num);
+      leftText.appendChild(airlineEl);
+      leftText.appendChild(extra);
+
+      left.appendChild(logo);
+      left.appendChild(leftText);
+
+      const middle = document.createElement("div");
+      middle.className = "flight-middle";
+
+      const depBlock = document.createElement("div");
+      depBlock.className = "time-block";
+      const depTime = document.createElement("div");
+      depTime.className = "time-main";
+      depTime.textContent = f.depTime;
+      const depCity = document.createElement("div");
+      depCity.className = "time-city";
+      depCity.textContent = f.from;
+      const depLabel = document.createElement("div");
+      depLabel.className = "time-label";
+      depLabel.textContent = "Departure";
+      depBlock.appendChild(depTime);
+      depBlock.appendChild(depCity);
+      depBlock.appendChild(depLabel);
+
+      const line = document.createElement("div");
+      line.className = "timeline";
+      const arrow = document.createElement("div");
+      arrow.className = "timeline-arrow";
+      const lineText = document.createElement("div");
+      lineText.textContent = "Route";
+      line.appendChild(arrow);
+      line.appendChild(lineText);
+
+      const arrBlock = document.createElement("div");
+      arrBlock.className = "time-block";
+      const arrTime = document.createElement("div");
+      arrTime.className = "time-main";
+      arrTime.textContent = f.arrTime;
+      const arrCity = document.createElement("div");
+      arrCity.className = "time-city";
+      arrCity.textContent = f.to;
+      const arrLabel = document.createElement("div");
+      arrLabel.className = "time-label";
+      arrLabel.textContent = "Arrival";
+      arrBlock.appendChild(arrTime);
+      arrBlock.appendChild(arrCity);
+      arrBlock.appendChild(arrLabel);
+
+      middle.appendChild(depBlock);
+      middle.appendChild(line);
+      middle.appendChild(arrBlock);
+
+      const right = document.createElement("div");
+      right.className = "flight-right";
+
+      const status = document.createElement("button");
+      status.type = "button";
+      const statusClass =
+        "status-" + f.status.replace(/\s+/g, "-");
+      status.className =
+        "status-pill " +
+        statusClass +
+        (occLoggedIn ? " status-clickable" : "");
+      status.textContent = f.status;
+      if (occLoggedIn) {
+        status.title = "Click to cycle status";
+        status.addEventListener("click", () => cycleStatus(f.id));
+      }
+      right.appendChild(status);
+
+      const gate = document.createElement("div");
+      gate.className = "gate-info";
+      gate.innerHTML =
+        "Gate / stand: <span>" + (f.gate || "TBA") + "</span>";
+      right.appendChild(gate);
+
+      if (f.remarks) {
+        const r = document.createElement("div");
+        r.className = "remarks";
+        r.textContent = f.remarks;
+        right.appendChild(r);
       }
 
-      forDate.forEach(f=>{
-        const card = document.createElement("article");
-        card.className="flight-card";
+      if (occLoggedIn) {
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
 
-        // LEFT
-        const left = document.createElement("div");
-        left.className="flight-left";
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "btn-small";
+        editBtn.textContent = "✏ Edit";
+        editBtn.addEventListener("click", () => startEditFlight(f.id));
 
-        const logo = document.createElement("div");
-        logo.className="airline-logo "+(f.airline==="flydubai"?"flydubai":"emirates");
-        logo.textContent = f.airline==="flydubai"?"FZ":"EKU";
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "btn-small";
+        delBtn.textContent = "🗑 Delete";
+        delBtn.addEventListener("click", () => deleteFlight(f.id));
 
-        const leftText = document.createElement("div");
-        leftText.className="flight-left-text";
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        right.appendChild(actions);
+      }
 
-        const num = document.createElement("div");
-        num.className="flight-number";
-        num.textContent = f.flightNumber;
+      card.appendChild(left);
+      card.appendChild(middle);
+      card.appendChild(right);
 
-        const airlineEl = document.createElement("div");
-        airlineEl.className="flight-airline";
-        airlineEl.textContent = f.airline;
+      flightsContainer.appendChild(card);
+    });
+  }
 
-        const extra = document.createElement("div");
-        extra.className="flight-extra";
-        extra.textContent = `${f.aircraft} · ${f.simulator}`;
+  // ---------- OCC ACTIONS ----------
+  function startEditFlight(id) {
+    const f = flights.find((fl) => fl.id === id);
+    if (!f) return;
+    editingIdInput.value = f.id;
+    flightDateInput.value = f.date;
+    flightNumberInput.value = f.flightNumber;
+    airlineSelect.value = f.airline;
+    aircraftInput.value = f.aircraft;
+    simSelect.value = f.simulator;
+    fromInput.value = f.from;
+    toInput.value = f.to;
+    depInput.value = f.depTime;
+    arrInput.value = f.arrTime;
+    statusSelect.value = f.status;
+    gateInput.value = f.gate || "";
+    remarksInput.value = f.remarks || "";
+    btnSaveFlight.textContent = "Save changes";
+    btnCancelEdit.style.display = "inline-flex";
+    flightDateInput.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }
 
-        leftText.appendChild(num);
-        leftText.appendChild(airlineEl);
-        leftText.appendChild(extra);
+  function deleteFlight(id) {
+    const f = flights.find((fl) => fl.id === id);
+    if (!f) return;
+    if (
+      !confirm(
+        "Delete flight " + f.flightNumber + " from this dashboard?"
+      )
+    )
+      return;
+    flights = flights.filter((fl) => fl.id !== id);
+    saveFlights();
+    showBanner(
+      occStatus,
+      "success",
+      "Flight " + f.flightNumber + " deleted."
+    );
+  }
 
-        left.appendChild(logo);
-        left.appendChild(leftText);
+  function cycleStatus(id) {
+    const f = flights.find((fl) => fl.id === id);
+    if (!f) return;
+    const idx = STATUS_SEQUENCE.indexOf(f.status);
+    const next =
+      STATUS_SEQUENCE[(idx + 1) % STATUS_SEQUENCE.length];
+    f.status = next;
+    saveFlights();
+  }
 
-        // MIDDLE
-        const middle = document.createElement("div");
-        middle.className="flight-middle";
-
-        const depBlock = document.createElement("div");
-        depBlock.className="time-block";
-        const depTime = document.createElement("div");
-        depTime.className="time-main";
-        depTime.textContent = f.depTime;
-        const depCity = document.createElement("div");
-        depCity.className="time-city";
-        depCity.textContent = f.from;
-        const depLabel = document.createElement("div");
-        depLabel.className="time-label";
-        depLabel.textContent = "Departure";
-        depBlock.appendChild(depTime);
-        depBlock.appendChild(depCity);
-        depBlock.appendChild(depLabel);
-
-        const line = document.createElement("div");
-        line.className="timeline";
-        const arrow = document.createElement("div");
-        arrow.className="timeline-arrow";
-        const lineText = document.createElement("div");
-        lineText.textContent = "Route";
-        line.appendChild(arrow);
-        line.appendChild(lineText);
-
-        const arrBlock = document.createElement("div");
-        arrBlock.className="time-block";
-        const arrTime = document.createElement("div");
-        arrTime.className="time-main";
-        arrTime.textContent = f.arrTime;
-        const arrCity = document.createElement("div");
-        arrCity.className="time-city";
-        arrCity.textContent = f.to;
-        const arrLabel = document.createElement("div");
-        arrLabel.className="time-label";
-        arrLabel.textContent = "Arrival";
-        arrBlock.appendChild(arrTime);
-        arrBlock.appendChild(arrCity);
-        arrBlock.appendChild(arrLabel);
-
-        middle.appendChild(depBlock);
-        middle.appendChild(line);
-        middle.appendChild(arrBlock);
-
-        // RIGHT
-        const right = document.createElement("div");
-        right.className="flight-right";
-
-        const status = document.createElement("button");
-        status.type="button";
-        const statusClass = "status-"+f.status.replace(/\s+/g,"-");
-        status.className = "status-pill "+statusClass+(occLoggedIn?" status-clickable":"");
-        status.textContent = f.status;
-        if(occLoggedIn){
-          status.title = "Click to cycle status";
-          status.addEventListener("click",()=>cycleStatus(f.id));
-        }
-        right.appendChild(status);
-
-        const gate = document.createElement("div");
-        gate.className="gate-info";
-        gate.innerHTML = 'Gate / stand: <span>'+(f.gate||"TBA")+'</span>';
-        right.appendChild(gate);
-
-        if(f.remarks){
-          const r = document.createElement("div");
-          r.className="remarks";
-          r.textContent = f.remarks;
-          right.appendChild(r);
-        }
-
-        if(occLoggedIn){
-          const actions = document.createElement("div");
-          actions.className="card-actions";
-
-          const editBtn = document.createElement("button");
-          editBtn.type="button";
-          editBtn.className="btn-small";
-          editBtn.textContent="✏ Edit";
-          editBtn.addEventListener("click",()=>startEditFlight(f.id));
-
-          const delBtn = document.createElement("button");
-          delBtn.type="button";
-          delBtn.className="btn-small";
-          delBtn.textContent="🗑 Delete";
-          delBtn.addEventListener("click",()=>deleteFlight(f.id));
-
-          actions.appendChild(editBtn);
-          actions.appendChild(delBtn);
-          right.appendChild(actions);
-        }
-
-        card.appendChild(left);
-        card.appendChild(middle);
-        card.appendChild(right);
-
-        flightsContainer.appendChild(card);
-      });
-    }
-
-    // ---------- OCC ACTIONS ----------
-    function startEditFlight(id){
-      const f = flights.find(fl=>fl.id===id);
-      if(!f) return;
-      editingIdInput.value = f.id;
-      flightDateInput.value = f.date;
-      flightNumberInput.value = f.flightNumber;
-      airlineSelect.value = f.airline;
-      aircraftInput.value = f.aircraft;
-      simSelect.value = f.simulator;
-      fromInput.value = f.from;
-      toInput.value = f.to;
-      depInput.value = f.depTime;
-      arrInput.value = f.arrTime;
-      statusSelect.value = f.status;
-      gateInput.value = f.gate || "";
-      remarksInput.value = f.remarks || "";
-      btnSaveFlight.textContent = "Save changes";
-      btnCancelEdit.style.display="inline-flex";
-      flightDateInput.scrollIntoView({behavior:"smooth",block:"center"});
-    }
-
-    function deleteFlight(id){
-      const f = flights.find(fl=>fl.id===id);
-      if(!f) return;
-      if(!confirm("Delete flight "+f.flightNumber+" from this dashboard?")) return;
-      flights = flights.filter(fl=>fl.id!==id);
-      saveFlights();
-      showBanner(occStatus,"success","Flight "+f.flightNumber+" deleted.");
-    }
-
-    function cycleStatus(id){
-      const f = flights.find(fl=>fl.id===id);
-      if(!f) return;
-      const idx = STATUS_SEQUENCE.indexOf(f.status);
-      const next = STATUS_SEQUENCE[(idx+1)%STATUS_SEQUENCE.length];
-      f.status = next;
-      saveFlights();
-    }
-
-    // ---------- EVENTS ----------
-    document.getElementById("prevWeek").addEventListener("click",()=>{
+  // ---------- EVENTS ----------
+  document
+    .getElementById("prevWeek")
+    .addEventListener("click", () => {
       weekOffsetDays -= 7;
       renderWeekStrip();
       renderFlights();
     });
-    document.getElementById("nextWeek").addEventListener("click",()=>{
+  document
+    .getElementById("nextWeek")
+    .addEventListener("click", () => {
       weekOffsetDays += 7;
       renderWeekStrip();
       renderFlights();
     });
-    searchInput.addEventListener("input",renderFlights);
+  searchInput.addEventListener("input", renderFlights);
 
-    loginForm.addEventListener("submit",e=>{
-      e.preventDefault();
-      const val = document.getElementById("occPassword").value;
-      if(val === OCC_PASSWORD){
-        document.getElementById("occPassword").value="";
-        setOCCLoggedIn(true);
-        showBanner(occStatus,"success","OCC login successful.");
-      }else{
-        showBanner(loginStatus,"error","Incorrect OCC password.");
-      }
-    });
+  loginForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const val = document.getElementById("occPassword").value;
+    if (val === OCC_PASSWORD) {
+      document.getElementById("occPassword").value = "";
+      setOCCLoggedIn(true);
+      showBanner(occStatus, "success", "OCC login successful.");
+    } else {
+      showBanner(loginStatus, "error", "Incorrect OCC password.");
+    }
+  });
 
-    btnLogout.addEventListener("click",()=>{
-      if(!confirm("Log out of OCC tools on this device?")) return;
-      setOCCLoggedIn(false);
-      resetForm();
-    });
+  btnLogout.addEventListener("click", () => {
+    if (!confirm("Log out of OCC tools on this device?")) return;
+    setOCCLoggedIn(false);
+    resetForm();
+  });
 
-    flightForm.addEventListener("submit",e=>{
-      e.preventDefault();
-      const id = editingIdInput.value;
-      const date = flightDateInput.value;
-      const flightNumber = flightNumberInput.value.trim();
-      const airline = airlineSelect.value;
-      const aircraft = aircraftInput.value.trim();
-      const simulator = simSelect.value;
-      const from = fromInput.value.trim();
-      const to = toInput.value.trim();
-      const depTime = depInput.value.trim();
-      const arrTime = arrInput.value.trim();
-      const status = statusSelect.value;
-      const gate = gateInput.value.trim();
-      const remarks = remarksInput.value.trim();
+  flightForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const id = editingIdInput.value;
+    const date = flightDateInput.value;
+    const flightNumber = flightNumberInput.value.trim();
+    const airline = airlineSelect.value;
+    const aircraft = aircraftInput.value.trim();
+    const simulator = simSelect.value;
+    const from = fromInput.value.trim();
+    const to = toInput.value.trim();
+    const depTime = depInput.value.trim();
+    const arrTime = arrInput.value.trim();
+    const status = statusSelect.value;
+    const gate = gateInput.value.trim();
+    const remarks = remarksInput.value.trim();
 
-      if(!date || !flightNumber || !aircraft || !from || !to || !depTime || !arrTime){
-        showBanner(occStatus,"error","Please fill in all required fields.");
-        return;
-      }
+    if (
+      !date ||
+      !flightNumber ||
+      !aircraft ||
+      !from ||
+      !to ||
+      !depTime ||
+      !arrTime
+    ) {
+      showBanner(
+        occStatus,
+        "error",
+        "Please fill in all required fields."
+      );
+      return;
+    }
 
-      if(id){
-        const idx = flights.findIndex(fl=>fl.id===id);
-        if(idx!==-1){
-          flights[idx] = {...flights[idx],date,flightNumber,airline,aircraft,simulator,from,to,depTime,arrTime,status,gate,remarks};
-        }
-        saveFlights();
-        showBanner(occStatus,"success","Flight "+flightNumber+" updated.");
-      }else{
-        const newFlight = {
-          id:String(Date.now()),
+    if (id) {
+      const idx = flights.findIndex((fl) => fl.id === id);
+      if (idx !== -1) {
+        flights[idx] = {
+          ...flights[idx],
           date,
           flightNumber,
           airline,
@@ -1226,36 +1285,77 @@
           arrTime,
           status,
           gate,
-          remarks
+          remarks,
         };
-        flights.push(newFlight);
-        saveFlights();
-        showBanner(occStatus,"success","Flight "+flightNumber+" added.");
       }
+      saveFlights();
+      showBanner(
+        occStatus,
+        "success",
+        "Flight " + flightNumber + " updated."
+      );
+    } else {
+      const newFlight = {
+        id: String(Date.now()),
+        date,
+        flightNumber,
+        airline,
+        aircraft,
+        simulator,
+        from,
+        to,
+        depTime,
+        arrTime,
+        status,
+        gate,
+        remarks,
+      };
+      flights.push(newFlight);
+      saveFlights();
+      showBanner(
+        occStatus,
+        "success",
+        "Flight " + flightNumber + " added."
+      );
 
-      // If we add a flight on a different date, switch to that date so it "goes directly" there
-      selectedDateKey = date;
-      weekOffsetDays = 0;
-      renderWeekStrip();
-      renderFlights();
-      resetForm();
-    });
+      // Tell the bot API to create a Discord scheduled event (if configured)
+      if (BOT_API_BASE) {
+        try {
+          fetch(`${BOT_API_BASE}/api/flights/create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newFlight),
+          }).catch((e) =>
+            console.error("Flight create API error:", e)
+          );
+        } catch (err2) {
+          console.error("Failed to notify bot for flight event:", err2);
+        }
+      }
+    }
 
-    btnCancelEdit.addEventListener("click",()=>{
-      resetForm();
-      showBanner(occStatus,"success","Edit cancelled.");
-    });
-
-    // ---------- INIT ----------
-    loadFlights();
-    selectedDateKey = dateToKey(new Date());
+    selectedDateKey = date;
+    weekOffsetDays = 0;
     renderWeekStrip();
     renderFlights();
-    if(localStorage.getItem(STORAGE_KEY_OCC)==="1"){
-      setOCCLoggedIn(true);
-    }else{
-      setOCCLoggedIn(false);
-    }
-  </script>
+    resetForm();
+  });
+
+  btnCancelEdit.addEventListener("click", () => {
+    resetForm();
+    showBanner(occStatus, "success", "Edit cancelled.");
+  });
+
+  // ---------- INIT ----------
+  loadFlights();
+  selectedDateKey = dateToKey(new Date());
+  renderWeekStrip();
+  renderFlights();
+  if (localStorage.getItem(STORAGE_KEY_OCC) === "1") {
+    setOCCLoggedIn(true);
+  } else {
+    setOCCLoggedIn(false);
+  }
+</script>
 </body>
 </html>
